@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriLumen - Сервіс прогнозування втрат врожаю</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary-green: #2d6a4f;
+            --light-green: #40916c;
+            --accent-lime: #d8f3dc;
+            --bg-gray: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-gray);
+            color: #333;
+        }
+
+        h1,
+        h2,
+        .brand-font {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Hero Section Styling */
+        .hero-bg {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Product Header Styling */
+        .header-bg {
+            background-color: #2e7d32;
+            background-image: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%);
+        }
+
+        .nav-link {
+            background: #e0e0e0;
+            color: #555;
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-transform: none;
+        }
+
+        .nav-link.active {
+            background: #ffffff;
+            color: #2e7d32;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .sidebar-title {
+            background: #f1f3f5;
+            padding: 12px 16px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 700;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .btn-action {
+            background: linear-gradient(180deg, #4caf50 0%, #2e7d32 100%);
+            color: white;
+            font-weight: 700;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+
+        .indicator-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .value-label {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        /* Chart Customization */
+        canvas {
+            max-height: 220px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Вкладка: ГОЛОВНИЙ ЕКРАН (Hero) -->
+    <section id="tab-hero" class="tab-content min-h-screen flex flex-col hero-bg text-white relative">
+        <div class="p-8 flex justify-between items-start">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-leaf text-2xl text-lime-400"></i>
+                <span class="font-bold tracking-widest text-sm uppercase">Project AgriLumen</span>
+            </div>
+        </div>
+
+        <div class="flex-grow flex flex-col justify-center items-center text-center px-4">
+            <h1 class="text-7xl md:text-9xl font-extrabold mb-4 tracking-tight">
+                Agri<span class="text-lime-400">Lumen</span>
+            </h1>
+            <p class="text-xl md:text-2xl font-light tracking-[0.2em] mb-12 uppercase">
+                Online service for crop loss forecasting
+            </p>
+
+            <div class="mt-8 space-y-2 text-lg font-medium">
+                <p>CEO — Ievheniia Mishchuk</p>
+                <p class="text-lime-400">mishchuk@knu.edu.ua</p>
+                <p>097 696 09 44</p>
+            </div>
+
+            <button onclick="switchTab('dashboard')"
+                class="mt-16 border-2 border-white px-10 py-4 rounded-full font-bold hover:bg-white hover:text-green-900 transition-all uppercase tracking-widest text-sm">
+                Увійти до системи
+            </button>
+        </div>
+    </section>
+
+    <!-- ОСНОВНИЙ ІНТЕРФЕЙС (Платформа) -->
+    <div id="platform-ui" class="hidden">
+        <header class="header-bg shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-white tracking-widest uppercase">AGR LUMEN</h2>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-green-100 uppercase">Project AgriLumen</span>
+                    <i class="fa-solid fa-leaf text-green-200"></i>
+                </div>
+            </div>
+            <div class="bg-gray-100/10 py-2 border-t border-white/10">
+                <div class="max-w-7xl mx-auto px-4 flex justify-center gap-2 overflow-x-auto whitespace-nowrap">
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-link active">Прогноз
+                        ризиків</button>
+                    <button onclick="switchTab('community')" id="btn-community" class="nav-link">Спільнота</button>
+                    <button onclick="switchTab('finance')" id="btn-finance" class="nav-link">Фінанси</button>
+                    <button class="nav-link">Дані</button>
+                    <button class="nav-link">Моя ферма</button>
+                    <button class="nav-link">Продаж</button>
+                    <button class="nav-link">Профіль</button>
+                    <button class="nav-link"><i class="fa-regular fa-clock"></i> Повідомлення</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 py-8">
+
+            <!-- Вкладка: ПРОГНОЗ РИЗИКІВ (Слайд 3) -->
+            <div id="content-dashboard" class="content-tab">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    <!-- Ліва панель: Геолокація -->
+                    <div class="lg:col-span-3 space-y-4">
+                        <div class="card">
+                            <div class="sidebar-title uppercase tracking-tighter">Геолокація поля</div>
+                            <div class="p-4 space-y-4">
+                                <div>
+                                    <label class="indicator-label block mb-1">Геолокація</label>
+                                    <div class="relative">
+                                        <input type="text" value="Моє місцезнаход..."
+                                            class="w-full bg-gray-50 border rounded px-3 py-2 text-sm outline-none">
+                                        <i
+                                            class="fa-solid fa-location-crosshairs absolute right-3 top-2.5 text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="indicator-label block mb-1">Культура</label>
+                                    <select class="w-full bg-gray-50 border rounded px-3 py-2 text-sm outline-none">
+                                        <option>Озима пшениця</option>
+                                        <option>Кукуруза</option>
+                                        <option>Соняшник</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="indicator-label block mb-1">Площа або об'єм</label>
+                                    <input type="text" value="8 га"
+                                        class="w-full bg-gray-50 border rounded px-3 py-2 text-sm outline-none">
+                                </div>
+                                <div>
+                                    <label class="indicator-label block mb-1">Очікувана ціна на ринку</label>
+                                    <input type="text" value="8 500 грн/т"
+                                        class="w-full bg-gray-50 border rounded px-3 py-2 text-sm outline-none font-bold">
+                                </div>
+                                <button class="w-full btn-action py-3 shadow-md hover:opacity-90 transition-opacity">
+                                    Розрахувати ризики
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Центр: Детальний аналіз -->
+                    <div class="lg:col-span-6 space-y-6">
+                        <div class="card p-6">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800">Поле №1 - Пшениця,</h3>
+                                    <p class="text-sm text-gray-500">Херсонська обл.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center gap-3 text-sm">
+                                    <i class="fa-solid fa-temperature-low text-blue-500 w-4"></i>
+                                    <span>Температура ґрунту (нижче порогу) 8°C</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm">
+                                    <i class="fa-solid fa-snowflake text-sky-400 w-4"></i>
+                                    <span>Ймовірність заморозків 40%</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm">
+                                    <i class="fa-solid fa-chart-line text-orange-400 w-4"></i>
+                                    <span>Прогнозовані втрати 32%</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm font-bold text-red-600">
+                                    <i class="fa-solid fa-money-bill-wave w-4"></i>
+                                    <span>Очікувані збитки: - 170 000 грн</span>
+                                </div>
+                            </div>
+
+                            <div class="h-64 border rounded bg-gray-50 p-2 mb-6">
+                                <canvas id="riskChart"></canvas>
+                            </div>
+
+                            <div class="text-xs text-gray-600 bg-gray-100 p-3 rounded">
+                                <p><strong>Критичний період:</strong> ніч з 25 по 26 березня.</p>
+                                <p>Не сіяти до 28 березня. Можливі нічні заморозки 30%.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Права панель: Індикатори -->
+                    <div class="lg:col-span-3 space-y-4">
+                        <div class="card p-5">
+                            <h4 class="sidebar-title -mx-5 -mt-5 mb-4 rounded-t">Ключові індикатори</h4>
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-droplet text-blue-400"></i>
+                                        <span class="text-sm">Вологість</span>
+                                    </div>
+                                    <span class="font-bold">15%</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-cloud-showers-heavy text-slate-400"></i>
+                                        <span class="text-sm">Очікувані опади</span>
+                                    </div>
+                                    <span class="font-bold">0.58 мм</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-wind text-slate-400"></i>
+                                        <span class="text-sm">Вітер</span>
+                                    </div>
+                                    <span class="font-bold">12 м/с</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <button class="w-full card p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                                <div
+                                    class="w-8 h-8 bg-amber-100 rounded flex items-center justify-center text-amber-600">
+                                    <i class="fa-solid fa-box"></i>
+                                </div>
+                                <span class="text-xs font-bold uppercase">Продати врожай</span>
+                            </button>
+                            <button class="w-full card p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                                <div
+                                    class="w-8 h-8 bg-emerald-100 rounded flex items-center justify-center text-emerald-600">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </div>
+                                <span class="text-xs font-bold uppercase">Експорт розрахунку</span>
+                            </button>
+                            <button class="w-full card p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                                <div class="w-8 h-8 bg-rose-100 rounded flex items-center justify-center text-rose-600">
+                                    <i class="fa-solid fa-calculator"></i>
+                                </div>
+                                <span class="text-xs font-bold uppercase">Перерахувати</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка: СПІЛЬНОТА (Об'єднання партій) -->
+            <div id="content-community" class="content-tab hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-3">
+                        <div class="card">
+                            <div class="sidebar-title uppercase">Пошук</div>
+                            <div class="p-4 space-y-4">
+                                <div>
+                                    <label class="indicator-label block mb-1">Культура</label>
+                                    <input type="text" value="Пшениця" class="w-full border rounded p-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="indicator-label block mb-1">Регіон</label>
+                                    <input type="text" value="Дніпропетровська обл."
+                                        class="w-full border rounded p-2 text-sm">
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded">
+                                    <p class="indicator-label">Період готовності</p>
+                                    <p class="font-bold text-sm">25.07 - 31.07</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded">
+                                    <p class="indicator-label">Бажана ціна збуту</p>
+                                    <p class="font-bold text-green-700 text-sm">12 500 грн/т</p>
+                                </div>
+                                <p class="text-[10px] text-gray-400 italic">Всі партії суміші з вашою: 46т - 3 фермери -
+                                    Синельник.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-9">
+                        <div class="card overflow-hidden">
+                            <div class="p-4 border-b bg-gray-50">
+                                <h3 class="font-bold text-gray-700">Пропозиції сусідніх фермерів</h3>
+                            </div>
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-100 text-[10px] font-bold uppercase text-gray-400">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left">Фермер</th>
+                                        <th class="px-6 py-3 text-center">Обсяг</th>
+                                        <th class="px-6 py-3 text-center">Відстань</th>
+                                        <th class="px-6 py-3 text-center">Дата</th>
+                                        <th class="px-6 py-3 text-center">Дія</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y">
+                                    <tr class="hover:bg-green-50">
+                                        <td class="px-6 py-4 font-bold italic">ФГ "Зелена долина"</td>
+                                        <td class="px-6 py-4 text-center">15 т</td>
+                                        <td class="px-6 py-4 text-center">12 км</td>
+                                        <td class="px-6 py-4 text-center">27.07</td>
+                                        <td class="px-6 py-4 text-center"><i
+                                                class="fa-solid fa-circle-check text-green-500"></i></td>
+                                    </tr>
+                                    <tr class="hover:bg-green-50">
+                                        <td class="px-6 py-4 font-bold italic">Соняшник</td>
+                                        <td class="px-6 py-4 text-center">20 т</td>
+                                        <td class="px-6 py-4 text-center">22 км</td>
+                                        <td class="px-6 py-4 text-center">25.07</td>
+                                        <td class="px-6 py-4 text-center"><i
+                                                class="fa-solid fa-circle-check text-green-500"></i></td>
+                                    </tr>
+                                    <tr class="hover:bg-green-50">
+                                        <td class="px-6 py-4 font-bold italic">ФГ "СонцеАгро"</td>
+                                        <td class="px-6 py-4 text-center">6 т</td>
+                                        <td class="px-6 py-4 text-center">8 км</td>
+                                        <td class="px-6 py-4 text-center">26.07</td>
+                                        <td class="px-6 py-4 text-center"><i
+                                                class="fa-solid fa-circle-check text-green-500"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="p-6 bg-slate-50 border-t">
+                                <h4 class="indicator-label mb-4">Результат</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between"><span>Ваша суміш:</span> <span
+                                                class="font-bold">4 т + 15 т + 20 т + 6 т = 46 т</span></div>
+                                        <div class="flex justify-between"><span>Локація збору:</span> <span
+                                                class="font-bold">ФГ "Зелена долина" (центр)</span></div>
+                                        <div class="flex justify-between text-green-700 font-bold"><span>Очікувана
+                                                ціна:</span> <span>12 800 грн/т</span></div>
+                                    </div>
+                                    <button class="btn-action py-4 rounded-full shadow-lg text-sm tracking-widest">
+                                        <i class="fa-solid fa-people-group mr-2"></i> Об'єднати партію
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка: ФІНАНСИ (Форварди) -->
+            <div id="content-finance" class="content-tab hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-center">
+                    <div class="card p-6 border-l-4 border-emerald-500">
+                        <p class="indicator-label mb-1">Прорахунок/збиток</p>
+                        <p class="text-3xl font-bold text-emerald-600">+$10 760</p>
+                    </div>
+                    <div class="card p-6">
+                        <p class="indicator-label mb-1">Відкриті контракти</p>
+                        <p class="text-3xl font-bold">4</p>
+                    </div>
+                    <div class="card p-6">
+                        <p class="indicator-label mb-1">Наступна поставка</p>
+                        <p class="text-3xl font-bold text-amber-500">10 <span class="text-sm">днів</span></p>
+                    </div>
+                </div>
+
+                <div class="card overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <h3 class="font-bold">Форвардні контракти</h3>
+                        <div class="flex gap-2">
+                            <button class="text-[10px] uppercase font-bold text-gray-400 hover:text-green-600">Фільтри
+                                <i class="fa-solid fa-filter"></i></button>
+                        </div>
+                    </div>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100 text-[10px] font-bold uppercase text-gray-400">
+                            <tr>
+                                <th class="px-6 py-3 text-left">ID</th>
+                                <th class="px-6 py-3 text-left">Контрагент</th>
+                                <th class="px-6 py-3 text-left">Культура/Обсяг</th>
+                                <th class="px-6 py-3 text-center">Ціна форварда</th>
+                                <th class="px-6 py-3 text-center">Ринкова ціна</th>
+                                <th class="px-6 py-3 text-center">Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr>
+                                <td class="px-6 py-4 font-mono text-gray-400 text-xs">FC-12342</td>
+                                <td class="px-6 py-4 font-bold">ПшеницяПлюс</td>
+                                <td class="px-6 py-4 italic">Пшениця / 150т</td>
+                                <td class="px-6 py-4 text-center font-bold">$180.00</td>
+                                <td class="px-6 py-4 text-center text-green-600 font-bold">$192/т</td>
+                                <td class="px-6 py-4 text-center">30.10.2025</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-mono text-gray-400 text-xs">FC-12348</td>
+                                <td class="px-6 py-4 font-bold">АгроТрейд</td>
+                                <td class="px-6 py-4 italic">Кукурудза / 200т</td>
+                                <td class="px-6 py-4 text-center font-bold">$201.00</td>
+                                <td class="px-6 py-4 text-center text-red-500 font-bold">$188/т</td>
+                                <td class="px-6 py-4 text-center">15.11.2025</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            // Hero logic
+            if (tabId === 'dashboard' || tabId === 'community' || tabId === 'finance') {
+                document.getElementById('tab-hero').classList.add('hidden');
+                document.getElementById('platform-ui').classList.remove('hidden');
+            }
+
+            // Tabs logic
+            document.querySelectorAll('.content-tab').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.add('active');
+
+            if (tabId === 'dashboard') initChart();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('riskChart').getContext('2d');
+            if (window.myChart) window.myChart.destroy();
+
+            window.myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['21', '22', '23', '24', '25', '26', '27', '28'],
+                    datasets: [{
+                        label: 'Температура ґрунту',
+                        data: [8, 11, 7, 2, -1, -3, 4, 9],
+                        borderColor: '#2e7d32',
+                        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 3
+                    }, {
+                        label: 'Ліміт (0°C)',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#ef4444',
+                        borderDash: [5, 5],
+                        borderWidth: 1,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
