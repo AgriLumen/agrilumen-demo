@@ -31,10 +31,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Власні стилі -->
-   <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
@@ -190,44 +193,15 @@
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-4 space-y-6">
                         <div class="card overflow-hidden">
-                            <div class="sidebar-title" data-i18n="farm_params">Параметри господарства</div>
-                            <div class="p-5 space-y-5">
-                                <div>
-                                    <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block"
-                                        data-i18n="land_area">Площа земель (га)</label>
-                                    <input type="number" value="450"
-                                        class="w-full bg-gray-50 border border-gray-200 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block"
-                                        data-i18n="soil_type">Тип ґрунтів</label>
-                                    <select
-                                        class="w-full bg-gray-50 border border-gray-200 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                                        id="soil-select">
-                                        <option data-i18n="soil_chernozem">Чорноземи типові</option>
-                                        <option data-i18n="soil_chestnut">Темно-каштанові</option>
-                                    </select>
-                                </div>
-                                <div class="flex items-center gap-6 pt-2">
-                                    <label class="flex items-center gap-2 text-xs font-medium cursor-pointer">
-                                        <input type="checkbox" checked class="w-4 h-4 accent-green-600 rounded"> <span
-                                            data-i18n="irrigation">Зрошення</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-xs font-medium cursor-pointer">
-                                        <input type="checkbox" checked class="w-4 h-4 accent-green-600 rounded"> <span
-                                            data-i18n="own_machinery">Своя техніка</span>
-                                    </label>
-                                </div>
-                                <button class="w-full btn-action mt-2" data-i18n="btn_update_profile">Оновити
-                                    профіль</button>
-                            </div>
+
                         </div>
                         <div class="card overflow-hidden">
                             <div class="sidebar-title flex justify-between items-center">
                                 <span data-i18n="gis_fields">Ваші поля (GIS)</span>
                                 <i class="fa-solid fa-map text-gray-400"></i>
                             </div>
-                            <div id="field-map"></div>
+                            <div id="field-map" class="w-full rounded-lg border border-gray-200"
+                                style="height: 450px; z-index: 1;"></div>
                             <div class="p-3 bg-gray-50 border-t text-[10px] text-gray-500 flex items-center gap-2">
                                 <i class="fa-solid fa-circle-info text-blue-400"></i>
                                 <span data-i18n="map_hint">Виберіть поле на карті для аналізу NDVI</span>
@@ -268,6 +242,7 @@
                                             <th class="px-5 py-4" data-i18n="th_variety">Сорт/Гібрид</th>
                                             <th class="px-5 py-4" data-i18n="th_date">Дата посіву</th>
                                             <th class="px-5 py-4" data-i18n="th_prev">Попередник</th>
+                                            <th class="px-5 py-4">Тип ґрунту</th>
                                             <th class="px-5 py-4" data-i18n="th_action">Дія</th>
                                         </tr>
                                     </thead>
@@ -359,15 +334,14 @@
                 </div>
             </div>
 
-            <!-- Вкладка: АНАЛІТИКА -->
             <div id="content-analytics" class="content-tab hidden">
 
-                <!-- НОВИЙ БЛОК: Панель керування симулятором -->
                 <div class="card p-6 mb-8 border-t-4 border-green-500 shadow-md bg-white">
                     <div class="flex flex-col md:flex-row items-end gap-6">
+
                         <div class="flex-1 w-full">
                             <label class="block text-[10px] font-bold uppercase text-gray-500 mb-2 tracking-widest">
-                                <i class="fa-solid fa-calendar-days mr-1"></i> Оберіть дату для моделювання
+                                <i class="fa-solid fa-calendar-days mr-1"></i> Оберіть дату
                             </label>
                             <input type="date" id="forecast-date" value="2025-05-21"
                                 class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all shadow-inner">
@@ -385,6 +359,15 @@
                             </select>
                         </div>
 
+                        <div class="flex-1 w-full">
+                            <label class="block text-[10px] font-bold uppercase text-gray-500 mb-2 tracking-widest">
+                                <i class="fa-solid fa-map mr-1"></i> Оберіть поле
+                            </label>
+                            <select id="forecast-field-select"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all">
+                            </select>
+                        </div>
+
                         <div class="flex-none w-full md:w-auto">
                             <button onclick="calculateByDate()"
                                 class="w-full bg-green-600 text-white px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-green-700 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2">
@@ -392,65 +375,83 @@
                             </button>
                         </div>
                     </div>
+
                     <p class="mt-4 text-[11px] text-gray-400 italic">
                         * Система автоматично згенерує погодні умови (температуру та тривалість стресу) відповідно до
                         сезону обраної дати.
                     </p>
-                </div>
-
-                <!-- ТВОЯ СІТКА З ГРАФІКОМ ТА РИЗИКАМИ -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2">
-                        <div class="card p-6 h-full flex flex-col shadow-sm border border-gray-100">
-                            <div
-                                class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                                <h3 class="font-bold text-lg text-gray-800">Динаміка ризику за моделлю "Доза-Ефект"</h3>
-                                <div class="flex gap-4">
-                                    <span class="flex items-center gap-1.5 text-xs font-medium">
-                                        <span class="w-3 h-3 bg-green-700 rounded-full"></span> Поточний сценарій
-                                    </span>
-                                </div>
+                    <div id="analytics-map" class="w-full h-80 bg-gray-200 rounded-lg shadow-md mb-6 relative z-10">
+                    </div>
+                    <div id="satellite-raw-data" class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg hidden">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-satellite-dish text-blue-500"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest text-slate-600">Отримано від Google
+                                Earth Engine</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="bg-white p-3 rounded border border-slate-100 shadow-sm">
+                                <span class="text-[10px] text-gray-500 uppercase block mb-1">Мультисенсорна
+                                    Оптика</span>
+                                <div id="raw-ndvi-val" class="w-full">Очікування...</div>
                             </div>
-                            <div class="h-80 flex-grow relative">
-                                <canvas id="probabilityChart"></canvas>
+                            <div class="bg-white p-3 rounded border border-slate-100 shadow-sm">
+                                <span class="text-[10px] text-gray-500 uppercase block mb-1">Температурний режим</span>
+                                <div id="raw-temp-val" class="w-full">Очікування...</div>
+                            </div>
+                            <div class="bg-white p-3 rounded border border-slate-100 shadow-sm">
+                                <span class="text-[10px] text-gray-500 uppercase block mb-1">Волога ґрунту</span>
+                                <div id="raw-moisture-val" class="w-full">Очікування...</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="space-y-6">
-                        <!-- КАРТКА ФІНАНСОВОГО РИЗИКУ -->
-                        <div class="card p-6 border-l-4 border-amber-500 shadow-sm bg-white">
-                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center gap-2">
-                                <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Прогнозний збиток
-                            </h4>
-                            <p class="text-3xl font-black text-amber-600 my-3" id="display-loss">0 грн</p>
-                            <p class="text-sm text-gray-600 bg-amber-50 p-3 rounded-lg border border-amber-100"
-                                data-i18n="risk_probability">
-                                Оберіть дату та натисніть кнопку для розрахунку
-                            </p>
-                        </div>
-
-                        <!-- ДЕРЕВО РІШЕНЬ -->
-                        <div class="card p-6 shadow-sm bg-white border border-gray-100">
+                        <div id="scenarios-wrapper" class="space-y-4 hidden mt-2">
                             <h4
-                                class="text-xs font-bold text-gray-400 uppercase mb-4 tracking-widest flex items-center gap-2">
-                                <i class="fa-solid fa-code-branch text-gray-400"></i> Параметри моделі
+                                class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-code-branch"></i> Сценарний прогноз (14 днів)
                             </h4>
-                            <div class="space-y-4">
-                                <div class="p-4 border-l-4 border-blue-500 text-sm bg-blue-50 rounded-r-lg">
-                                    <strong>Погодні умови</strong> <br>
-                                    <span class="text-blue-700 mt-1 inline-block">-</span>
+
+                            <div
+                                class="p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg shadow-sm transition-all hover:scale-[1.02]">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-bold text-emerald-700 uppercase">Оптимістичний</span>
+                                    <span id="opt-yield"
+                                        class="text-xs font-bold text-emerald-800 bg-emerald-200 px-2 py-0.5 rounded">0
+                                        т/га</span>
                                 </div>
-                                <div class="p-4 border-l-4 border-green-500 text-sm bg-green-50 rounded-r-lg">
-                                    <strong>Розрахунок дози</strong> <br>
-                                    <span class="text-green-700 mt-1 inline-block">-</span>
+                                <div class="text-2xl font-black text-emerald-600" id="opt-rev">0 грн</div>
+                                <div class="text-[10px] text-emerald-600 mt-1">Сприятлива погода, відновлення вегетації
                                 </div>
+                            </div>
+
+                            <div
+                                class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg shadow-sm transition-all hover:scale-[1.02]">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-bold text-blue-700 uppercase">Реалістичний</span>
+                                    <span id="real-yield"
+                                        class="text-xs font-bold text-blue-800 bg-blue-200 px-2 py-0.5 rounded">0
+                                        т/га</span>
+                                </div>
+                                <div class="text-2xl font-black text-blue-600" id="real-rev">0 грн</div>
+                                <div class="text-[10px] text-blue-600 mt-1">Історична норма, збереження тренду</div>
+                            </div>
+
+                            <div
+                                class="p-4 bg-rose-50 border-l-4 border-rose-500 rounded-r-lg shadow-sm transition-all hover:scale-[1.02]">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-bold text-rose-700 uppercase">Песимістичний</span>
+                                    <span id="pes-yield"
+                                        class="text-xs font-bold text-rose-800 bg-rose-200 px-2 py-0.5 rounded">0
+                                        т/га</span>
+                                </div>
+                                <div class="text-2xl font-black text-rose-600" id="pes-rev">0 грн</div>
+                                <div class="text-[10px] text-rose-600 mt-1">Жорстка посуха або температурний шок</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Вкладка: РЕКОМЕНДАЦІЇ -->
             <div id="content-recommendations" class="content-tab hidden">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div
@@ -466,9 +467,8 @@
                         <h4 class="font-bold text-xl mb-3 text-gray-800" data-i18n="rec_1_title">Фіксуйте ціну зараз
                         </h4>
                         <p class="text-sm text-gray-600 mb-6 leading-relaxed" data-i18n="rec_1_text">На основі прогнозу
-                            цін у серпні
-                            ($210/т) рекомендуємо укласти форвардний контракт на 30% врожаю пшениці за поточною ціною
-                            $224/т.</p>
+                            цін у серпні ($210/т) рекомендуємо укласти форвардний контракт на 30% врожаю пшениці за
+                            поточною ціною $224/т.</p>
                         <button class="w-full btn-action" data-i18n="btn_to_sale">Перейти до продажу</button>
                     </div>
 
@@ -484,8 +484,7 @@
                         </div>
                         <h4 class="font-bold text-xl mb-3 text-gray-800" data-i18n="rec_2_title">Оптимізація добрив</h4>
                         <p class="text-sm text-gray-600 mb-6 leading-relaxed" data-i18n="rec_2_text">Рівень вологості на
-                            полі №1
-                            дозволяє внести додаткові 40 кг азоту. Очікувана окупність витрат 1:3.4.</p>
+                            полі №1 дозволяє внести додаткові 40 кг азоту. Очікувана окупність витрат 1:3.4.</p>
                         <button
                             class="w-full bg-white border-2 border-gray-200 py-3 rounded-lg font-bold text-xs uppercase tracking-widest text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all"
                             data-i18n="btn_calc">Детальний розрахунок</button>
@@ -503,33 +502,31 @@
                         </div>
                         <h4 class="font-bold text-xl mb-3 text-gray-800" data-i18n="rec_3_title">Змінити сівозміну</h4>
                         <p class="text-sm text-gray-600 mb-6 leading-relaxed" data-i18n="rec_3_text">Високий ризик
-                            дефіциту вологи у
-                            травні для кукурудзи. Розгляньте заміну на просо або скорочення площі під соняшник.</p>
+                            дефіциту вологи у травні для кукурудзи. Розгляньте заміну на просо або скорочення площі під
+                            соняшник.</p>
                         <button
                             class="w-full bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100 hover:text-rose-800 py-3 rounded-lg font-bold text-xs transition-colors border"
                             data-i18n="btn_model">Моделювати заміну</button>
                     </div>
                 </div>
             </div>
-
-            <!-- Вкладка: СПІЛЬНОТА -->
             <div id="content-community" class="content-tab hidden">
                 <div class="card p-10 text-center max-w-2xl mx-auto shadow-sm border-t-4 border-green-600">
                     <div class="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <i class="fa-solid fa-users text-4xl text-green-500"></i>
                     </div>
                     <h2 class="text-3xl font-bold mb-4 text-gray-800" data-i18n="comm_title">Спільнота фермерів</h2>
-                    <p class="text-gray-600 mb-8 italic text-lg leading-relaxed px-4" data-i18n="comm_text">Знайдіть
-                        сусідів поблизу, щоб сформувати
-                        партію від 50 тонн і отримати ціну на 15% вищу за ринкову.</p>
+                    <p class="text-gray-600 mb-8 italic text-lg leading-relaxed px-4" data-i18n="comm_text">
+                        Знайдіть сусідів поблизу, щоб сформувати партію від 50 тонн і отримати ціну на 15% вищу за
+                        ринкову.
+                    </p>
                     <button
                         class="btn-action text-sm px-8 py-4 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all"
                         data-i18n="comm_btn">
-                        <i class="fa-solid fa-user-plus mr-2"></i> Знайти партнерів (Синельникове)</button>
+                        <i class="fa-solid fa-user-plus mr-2"></i> Знайти партнерів (Синельникове)
+                    </button>
                 </div>
             </div>
-
-            <!-- Вкладка: АНКЕТУВАННЯ -->
             <div id="content-survey" class="content-tab hidden">
                 <div class="card p-0 overflow-hidden survey-container shadow-sm border border-gray-200"
                     style="height: 850px;">
@@ -544,8 +541,8 @@
 
     <!-- Власні скрипти -->
     <script async src="https://weatherwidget.io/js/widget.min.js"></script>
-    <script src="translations.js"></script>
-<script src="app.js"></script>
+    <script src="js/translations.js"></script>
+    <script src="js/app.js"></script>
 </body>
 
 </html>
