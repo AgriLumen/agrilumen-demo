@@ -54,23 +54,7 @@ async function loadFieldsFromDB() {
     }
 }
 
-function updateAnalyticsFieldSelector() {
-    const select = document.getElementById('forecast-field-select');
-    if (!select) return;
 
-    select.innerHTML = '';
-    if (userFields.length === 0) {
-        select.innerHTML = '<option value="">Спочатку додайте поле</option>';
-        return;
-    }
-
-    userFields.forEach(f => {
-        const opt = document.createElement('option');
-        opt.value = f.id;
-        opt.innerText = `${f.field} (${f.area} га)`;
-        select.appendChild(opt);
-    });
-}
 
 // НОВА ФУНКЦІЯ: заповнює випадаючий список полів
 function updateAnalyticsFieldSelector() {
