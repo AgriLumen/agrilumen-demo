@@ -251,24 +251,31 @@ async function addNewField() {
     const fieldName = prompt("Назва поля:", `Поле №${userFields.length + 1}`);
     if (!fieldName) return;
 
-    const cropInput = prompt("Культура (wheat, corn, sunflower):", "wheat");
+    const cropInput = prompt("Культура (wheat, corn, sunflower, rapeseed):", "wheat");
     const variety = prompt("Сорт або гібрид:", "Стандарт");
     const pDate = prompt("Дата посіву (РРРР-ММ-ДД):", new Date().toISOString().split('T')[0]);
-    const prev = prompt("Попередник:", "Пшениця");
+    const prev = prompt("Попередник:", "Невідомо");
 
-    // ... (всередині addNewField)
+    // ЖОРСТКА перевірка на числа, щоб ніколи не відправлявся null
+    const safeArea = parseFloat(window.drawnArea) || 0.0;
+    const safeLat = parseFloat(window.lastClickedLat) || 0.0;
+    const safeLon = parseFloat(window.lastClickedLon) || 0.0;
+
     const newField = {
         cadastre: "Контур з карти",
         name: fieldName,
         crop: cropInput || "wheat",
-        area: parseFloat(window.drawnArea) || 0,
-        lat: window.lastClickedLat,
-        lon: window.lastClickedLon,
-        variety: variety || "Не вказано",
-        planting_date: pDate || "Не вказано",
+        area: safeArea,
+        lat: safeLat,
+        lon: safeLon,
+        variety: variety || "Стандарт",
+        planting_date: pDate || new Date().toISOString().split('T')[0],
         prev_crop: prev || "Невідомо",
-        geometry: JSON.stringify(window.drawnPolygonCoords) // <--- ПАКУЄМО МАЛЮНОК
+        geometry: JSON.stringify(window.drawnPolygonCoords),
+        soil_type: "Чорнозем"
     };
+
+    console.log("📦 Відправляємо на сервер:", newField); // Виведемо в консоль те, що відправляємо
 
     try {
         const response = await fetch('http://127.0.0.1:8000/api/fields', {
@@ -279,16 +286,16 @@ async function addNewField() {
 
         if (response.ok) {
             await loadFieldsFromDB();
-            drawnItems.clearLayers();
+            if (typeof drawnItems !== 'undefined' && drawnItems) drawnItems.clearLayers();
             window.drawnPolygonCoords = null;
             alert("Поле успішно додано!");
         } else {
-            // Якщо Python згенерував помилку (наприклад, 500)
-            const errText = await response.text();
-            alert(`Помилка сервера при ДОДАВАННІ:\n${errText}`);
+            // Тепер ми витягнемо точну причину від Python і покажемо її
+            const errData = await response.json();
+            console.error("🚨 Python каже (деталі помилки 422):", JSON.stringify(errData, null, 2));
+            alert(`Помилка валідації! Відкрий консоль (F12), щоб побачити, яке саме поле не сподобалося серверу.`);
         }
     } catch (error) {
-        // Якщо сервер взагалі вимкнено (Uvicorn впав)
         alert(`Сервер не відповідає. Перевір чорний термінал Python!\nПомилка: ${error.message}`);
     }
 }
