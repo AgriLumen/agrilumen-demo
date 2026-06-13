@@ -412,12 +412,42 @@ async function calculateByDate() {
     const lossEl = document.getElementById('display-loss');
     if (lossEl) lossEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Аналізуємо космос...`;
 
+    // --- ЛОГІКА ПРОГРЕС-БАРУ (ДОДАНО) ---
+    const loader = document.getElementById('analytics-loader');
+    const loaderBar = document.getElementById('loader-bar');
+    const loaderText = document.getElementById('loader-text');
+    const loaderPercent = document.getElementById('loader-percent');
+
+    const updateProgress = (pct, text) => {
+        if (loaderBar) loaderBar.style.width = `${pct}%`;
+        if (loaderPercent) loaderPercent.innerText = `${pct}%`;
+        if (text && loaderText) loaderText.innerText = text;
+    };
+
+    if (loader) {
+        loader.classList.remove('hidden');
+        loader.classList.add('flex');
+    }
+    updateProgress(5, "Ініціалізація запиту до бази даних...");
+
+    // Імітація процесу для важких операцій
+    let fakeProgress = setTimeout(() => updateProgress(25, "Отримання радарних даних (Sentinel-1)..."), 1500);
+    let fakeProgress2 = setTimeout(() => updateProgress(45, "Розрахунок індексу вологи та температури..."), 3500);
+    let fakeProgress3 = setTimeout(() => updateProgress(60, "Завантаження мультиспектральних знімків..."), 6000);
+    // -------------------------------------
+
     try {
         // 1. ЗАПИТ ДО НАШОГО PYTHON-СЕРВЕРА (Супутники та Кліматичні моделі)
         const response = await fetch(`http://127.0.0.1:8000/api/analyze/${fieldId}?date_start=${dateVal}&date_end=${dateVal}`);
+
+        // Як тільки сервер відповів, чистимо таймери прогрес-бару
+        clearTimeout(fakeProgress); clearTimeout(fakeProgress2); clearTimeout(fakeProgress3);
+        updateProgress(75, "Дані отримано! Моделювання кліматичних ризиків...");
+
         const realData = await response.json();
 
         if (realData.error) {
+            if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); }
             alert("Помилка супутника: " + realData.error);
             if (lossEl) lossEl.innerText = `Помилка`;
             return;
@@ -494,13 +524,14 @@ async function calculateByDate() {
         const isWinter = [12, 1, 2, 3].includes(month);
 
         if (finalNdviToUse < 0.15 && !isWinter) {
+            if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); }
             if (lossEl) lossEl.innerText = `Нецільова ділянка`;
             alert(`🛰️ Розрахунковий NDVI = ${finalNdviToUse.toFixed(2)}. Показник занадто низький для вегетації!`);
             return;
         }
 
         // === 6. ЗВ'ЯЗОК З PYTHON ДЛЯ СЦЕНАРНОГО ПРОГНОЗУВАННЯ ===
-        // === 6. ЗВ'ЯЗОК З PYTHON ДЛЯ СЦЕНАРНОГО ПРОГНОЗУВАННЯ ===
+        updateProgress(85, "Генерація фінансових сценаріїв...");
         const crop = AGRI_MODEL.crops[cropKey] || AGRI_MODEL.crops['wheat'];
         const targetMonth = new Date(dateVal).getMonth() + 1;
 
@@ -522,11 +553,9 @@ async function calculateByDate() {
         const realRevEl = document.getElementById('real-rev');
         if (realRevEl) realRevEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
 
-        // Ховаємо старий блок єдиного збитку (якщо він ще є в HTML)
+        // Ховаємо старий блок єдиного збитку
         const oldLossBlock = document.getElementById('display-loss');
         if (oldLossBlock) oldLossBlock.parentElement.classList.add('hidden');
-
-        let eventType = 'none'; // Заглушка для сумісності з графіком
 
         try {
             // Відправляємо POST-запит на Python-сервер
@@ -567,6 +596,7 @@ async function calculateByDate() {
         }
 
         // === 7. ОНОВЛЕННЯ ІНТЕРФЕЙСУ (Сирі дані) ===
+        updateProgress(95, "Рендеринг теплової мапи...");
         const weatherDescEl = document.getElementById('model-weather-desc');
         if (weatherDescEl) weatherDescEl.innerHTML = `<i class="fa-solid fa-temperature-half"></i> Повітря: ${airTemp.toFixed(1)}°C | <i class="fa-solid fa-cloud-rain"></i> Опади: ${airPrecip} мм`;
 
@@ -679,15 +709,15 @@ async function calculateByDate() {
             }
         }
 
-        const probEl = document.querySelector('[data-i18n="risk_probability"]');
-        if (probEl) {
-            probEl.innerHTML = `<strong>Температура: ${satTemp.toFixed(1)}°C | NDVI: ${finalNdviToUse.toFixed(2)} | Волога: ${moisture.toFixed(1)}%</strong>. Втрати: ${lossPercent}% (для площі ${area} га)`;
-        }
-
-        renderRiskChart(finalRisk, eventType);
+        // Завершуємо завантаження
+        updateProgress(100, "Готово!");
+        setTimeout(() => {
+            if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); }
+        }, 600);
 
     } catch (error) {
         console.error("Помилка розрахунку:", error);
+        if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); }
         if (lossEl) lossEl.innerText = `Помилка з'єднання`;
     }
 }
@@ -740,7 +770,15 @@ function switchTab(tabId) {
 
         // 4. Запускаємо логіку вкладки
         if (tabId === 'dashboard') initDashboardChart();
-        if (tabId === 'analytics') calculateByDate();
+
+        // ---> ОСЬ ТУТ ЗМІНЕНО: прибрано calculateByDate() і додано оновлення розміру карти <---
+        if (tabId === 'analytics') {
+            if (window.analyticsMapInstance) {
+                setTimeout(() => window.analyticsMapInstance.invalidateSize(), 100);
+            }
+        }
+        // --------------------------------------------------------------------------------------
+
         if (tabId === 'myfarm') {
             updateFarmTableUI();
             setTimeout(() => {
