@@ -543,8 +543,7 @@ async function calculateByDate() {
 
         try {
             // Відправляємо POST-запит на Python-сервер
-            const scenResp = await fetch('https://agrilumen-demo.onrender.com
-                                         /api/forecast_scenarios', {
+            const scenResp = await fetch('https://agrilumen-demo.onrender.com/api/forecast_scenarios', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(scenarioPayload)
