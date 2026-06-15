@@ -2,6 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 import json
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import ee
@@ -9,10 +10,19 @@ import sqlite3
 from pydantic import BaseModel
 from datetime import datetime
 
-# --- Ініціалізація GEE із захистом ---
+# --- Безпечна ініціалізація GEE для хмари та ПК ---
 try:
-    ee.Initialize(project='onyx-antler-495614-v2')
-    print("🛰️ Підключення до Google Earth Engine УСПІШНЕ!")
+    gee_key_env = os.environ.get("GEE_JSON_KEY")
+    if gee_key_env:
+        # Запуск на хмарному сервері Render
+        key_data = json.loads(gee_key_env)
+        credentials = ee.ServiceAccountCredentials(key_data['client_email'], key_data=gee_key_env)
+        ee.Initialize(credentials=credentials, project='onyx-antler-495614-v2')
+        print("🛰️ Підключення до Google Earth Engine у хмарі Render УСПІШНЕ!")
+    else:
+        # Локальний запуск на твоєму ноутбуці
+        ee.Initialize(project='onyx-antler-495614-v2')
+        print("🛰️ Локальне підключення до Earth Engine УСПІШНЕ!")
 except Exception as e:
     print(f"❌ Помилка підключення до Earth Engine: {e}")
 
