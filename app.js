@@ -28,7 +28,7 @@ window.analyticsPolygonLayer = null;
 // ==========================================
 async function loadFieldsFromDB() {
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/fields');
+        const response = await fetch('https://agrilumen-demo.onrender.com/api/fields');
         if (!response.ok) throw new Error('Мережева помилка');
         const fields = await response.json();
 
@@ -262,7 +262,7 @@ async function addNewField() {
     console.log("📦 Відправляємо на сервер:", newField); // Виведемо в консоль те, що відправляємо
 
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/fields', {
+        const response = await fetch('https://agrilumen-demo.onrender.com/api/fields', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newField)
@@ -329,7 +329,7 @@ async function saveRowEdit(id) {
         const saveBtn = document.querySelector(`button[onclick="saveRowEdit(${id})"]`);
         if (saveBtn) saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
 
-        const response = await fetch(`http://127.0.0.1:8000/api/fields/${id}`, {
+        const response = await fetch(`https://agrilumen-demo.onrender.com/api/fields/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData)
@@ -354,7 +354,7 @@ async function removeField(id) {
     if (!confirm("Ви впевнені, що хочете видалити це поле?")) return;
 
     try {
-        const response = await fetch(`http://127.0.0.1:8000/api/fields/${id}`, {
+        const response = await fetch(`https://agrilumen-demo.onrender.com/api/fields/${id}`, {
             method: 'DELETE'
         });
         if (response.ok) {
@@ -422,7 +422,7 @@ async function calculateByDate() {
 
     try {
         // 1. ЗАПИТ ДО НАШОГО PYTHON-СЕРВЕРА (Супутники та Кліматичні моделі)
-        const response = await fetch(`http://127.0.0.1:8000/api/analyze/${fieldId}?date_start=${dateVal}&date_end=${dateVal}`);
+        const response = await fetch(`https://agrilumen-demo.onrender.com/api/analyze/${fieldId}?date_start=${dateVal}&date_end=${dateVal}`);
 
         // Як тільки сервер відповів, чистимо таймери прогрес-бару
         clearTimeout(fakeProgress); clearTimeout(fakeProgress2); clearTimeout(fakeProgress3);
@@ -543,7 +543,8 @@ async function calculateByDate() {
 
         try {
             // Відправляємо POST-запит на Python-сервер
-            const scenResp = await fetch('http://127.0.0.1:8000/api/forecast_scenarios', {
+            const scenResp = await fetch('https://agrilumen-demo.onrender.com
+                                         /api/forecast_scenarios', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(scenarioPayload)
@@ -669,7 +670,7 @@ async function calculateByDate() {
             }
 
             try {
-                const tileResp = await fetch(`http://127.0.0.1:8000/api/map_layers/${fieldId}?target_date=${dateVal}`);
+                const tileResp = await fetch(`https://agrilumen-demo.onrender.com/api/map_layers/${fieldId}?target_date=${dateVal}`);
                 const tileData = await tileResp.json();
 
                 if (tileData.status === "success") {
@@ -905,7 +906,7 @@ function initMapOnce() {
 
             // Відправляємо на сервер
             try {
-                await fetch(`http://127.0.0.1:8000/api/fields/${fieldId}`, {
+                await fetch(`https://agrilumen-demo.onrender.com/api/fields/${fieldId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedData)
